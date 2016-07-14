@@ -1,7 +1,7 @@
 # GoWebApp
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/josephspurrier/gowebapp)](https://goreportcard.com/report/github.com/josephspurrier/gowebapp)
-[![GoDoc](https://godoc.org/github.com/josephspurrier/gowebapp?status.svg)](https://godoc.org/github.com/josephspurrier/gowebapp) 
+[![GoDoc](https://godoc.org/github.com/josephspurrier/gowebapp?status.svg)](https://godoc.org/github.com/josephspurrier/gowebapp)
 
 Basic MVC Web Application in Go
 
@@ -17,14 +17,6 @@ go get github.com/josephspurrier/gowebapp
 
 If you are on Go 1.5, you need to set GOVENDOREXPERIMENT to 1. If you are on Go 1.4 or earlier, the code will not work because it uses the vendor folder.
 
-## Quick Start with Bolt
-
-The gowebapp.db file will be created once you start the application.
-
-Build and run from the root directory. Open your web browser to: http://localhost. You should see the welcome page.
-
-Navigate to the login page, and then to the register page. Create a new user and you should be able to login. That's it.
-
 ## Quick Start with MongoDB
 
 Start MongoDB.
@@ -35,38 +27,28 @@ Build and run from the root directory. Open your web browser to: http://localhos
 
 Navigate to the login page, and then to the register page. Create a new user and you should be able to login. That's it.
 
-## Quick Start with MySQL
-
-Start MySQL and import config/mysql.sql to create the database and tables.
-
-Open config/config.json and edit the Database section so the connection information matches your MySQL instance. Also, change Type from Bolt to MySQL.
-
-Build and run from the root directory. Open your web browser to: http://localhost. You should see the welcome page.
-
-Navigate to the login page, and then to the register page. Create a new user and you should be able to login. That's it.
-
 ## Overview
 
 The web app has a public home page, authenticated home page, login page, register page,
 about page, and a simple notepad to demonstrate the CRUD operations.
 
-The entrypoint for the web app is gowebapp.go. The file loads the application settings, 
-starts the session, connects to the database, sets up the templates, loads 
+The entrypoint for the web app is gowebapp.go. The file loads the application settings,
+starts the session, connects to the database, sets up the templates, loads
 the routes, attaches the middleware, and starts the web server.
 
-The front end is built using Bootstrap with a few small changes to fonts and spacing. The flash 
+The front end is built using Bootstrap with a few small changes to fonts and spacing. The flash
 messages are customized so they show up at the bottom right of the screen.
 
-All of the error and warning messages should be either displayed either to the 
-user or in the console. Informational messages are displayed to the user via 
-flash messages that disappear after 4 seconds. The flash messages are controlled 
+All of the error and warning messages should be either displayed either to the
+user or in the console. Informational messages are displayed to the user via
+flash messages that disappear after 4 seconds. The flash messages are controlled
 by JavaScript in the static folder.
 
 ## Structure
 
-Recently, the folder structure changed. After looking at all the forks 
-and reusing my project in different places, I decided to move the Go code to the 
-**app** folder inside the **vendor** folder so the github path is not littered 
+Recently, the folder structure changed. After looking at all the forks
+and reusing my project in different places, I decided to move the Go code to the
+**app** folder inside the **vendor** folder so the github path is not littered
 throughout the many imports. I did not want to use relative paths so the vendor
 folder seemed like the best option.
 
@@ -116,7 +98,7 @@ base.tmpl		       - base template for all the pages
 
 ## Templates
 
-There are a few template funcs that are available to make working with the templates 
+There are a few template funcs that are available to make working with the templates
 and static files easier:
 
 ~~~ html
@@ -189,9 +171,9 @@ flashWarning("Something does not seem right...");
 
 ## Controllers
 
-The controller files all share the same package name. This cuts down on the 
+The controller files all share the same package name. This cuts down on the
 number of packages when you are mapping the routes. It also forces you to use
-a good naming convention for each of the funcs so you know where each of the 
+a good naming convention for each of the funcs so you know where each of the
 funcs are located and what type of HTTP request they each are mapped to.
 
 ### These are a few things you can do with controllers.
@@ -270,7 +252,7 @@ if err == sql.ErrNoRows {
 } else if err != nil {
 	// Display error message
 } else if passhash.MatchString(result.Password, password) {
-	// Password matches!	
+	// Password matches!
 } else {
 	// Password does not match
 }
@@ -303,7 +285,7 @@ if !recaptcha.Verified(r) {
 
 ## Database
 
-It's a good idea to abstract the database layer out so if you need to make 
+It's a good idea to abstract the database layer out so if you need to make
 changes, you don't have to look through business logic to find the queries. All
 the queries are stored in the models folder.
 
@@ -339,20 +321,20 @@ return err
 
 ## Middleware
 
-There are a few pieces of middleware included. The package called csrfbanana 
-protects against Cross-Site Request Forgery attacks and prevents double submits. 
-The package httprouterwrapper provides helper functions to make funcs compatible 
-with httprouter. The package logrequest will log every request made against the 
-website to the console. The package pprofhandler enables pprof so it will work 
-with httprouter. In route.go, all the individual routes use alice to make 
+There are a few pieces of middleware included. The package called csrfbanana
+protects against Cross-Site Request Forgery attacks and prevents double submits.
+The package httprouterwrapper provides helper functions to make funcs compatible
+with httprouter. The package logrequest will log every request made against the
+website to the console. The package pprofhandler enables pprof so it will work
+with httprouter. In route.go, all the individual routes use alice to make
 chaining very easy.
 
 ## Configuration
 
-To make the web app a little more flexible, you can make changes to different 
-components in one place through the config.json file. If you want to add any 
+To make the web app a little more flexible, you can make changes to different
+components in one place through the config.json file. If you want to add any
 of your own settings, you can add them to config.json and update the structs
-in gowebapp.go and the individual files so you can reference them in your code. 
+in gowebapp.go and the individual files so you can reference them in your code.
 This is config.json:
 
 ~~~ json
@@ -424,7 +406,7 @@ This is config.json:
 }
 ~~~
 
-To enable HTTPS, set UseHTTPS to true, create a folder called tls in the root, 
+To enable HTTPS, set UseHTTPS to true, create a folder called tls in the root,
 and then place the certificate and key files in that folder.
 
 ## Screenshots
@@ -463,5 +445,5 @@ Edit Note:
 
 ## Feedback
 
-All feedback is welcome. Let me know if you have any suggestions, questions, or criticisms. 
+All feedback is welcome. Let me know if you have any suggestions, questions, or criticisms.
 If something is not idiomatic to Go, please let me know know so we can make it better.
