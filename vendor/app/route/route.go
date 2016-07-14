@@ -127,6 +127,27 @@ func routes() *httprouter.Router {
 		New(acl.DisallowAnon).
 		ThenFunc(controller.EmployeeDeleteGET)))
 
+	// Project
+	r.GET("/project", hr.Handler(alice.
+		New(acl.DisallowAnon).
+		ThenFunc(controller.ProjectReadGET)))
+	r.GET("/project/create", hr.Handler(alice.
+		New(acl.DisallowAnon).
+		ThenFunc(controller.ProjectCreateGET)))
+	r.POST("/project/create", hr.Handler(alice.
+		New(acl.DisallowAnon).
+		ThenFunc(controller.ProjectCreatePOST)))
+	r.GET("/project/update/:id", hr.Handler(alice.
+		New(acl.DisallowAnon).
+		ThenFunc(controller.ProjectUpdateGET)))
+	r.POST("/project/update/:id", hr.Handler(alice.
+		New(acl.DisallowAnon).
+		ThenFunc(controller.ProjectUpdatePOST)))
+	r.GET("/project/delete/:id", hr.Handler(alice.
+		New(acl.DisallowAnon).
+		ThenFunc(controller.ProjectDeleteGET)))
+
+
 	// Enable Pprof
 	r.GET("/debug/pprof/*pprof", hr.Handler(alice.
 		New(acl.DisallowAnon).

@@ -37,7 +37,7 @@ func EmployeeReadGET(w http.ResponseWriter, r *http.Request) {
 	v.Render(w)
 }
 
-// RegisterGET displays the register page
+// EmployeeCreateGET displays the register page
 func EmployeeCreateGET(w http.ResponseWriter, r *http.Request) {
 	// Get session
 	sess := session.Instance(r)
@@ -51,23 +51,16 @@ func EmployeeCreateGET(w http.ResponseWriter, r *http.Request) {
 	v.Render(w)
 }
 
-// RegisterPOST handles the registration form submission
+// EmployeeCreatePOST handles the registration form submission
 func EmployeeCreatePOST(w http.ResponseWriter, r *http.Request) {
 	// Get session
 	sess := session.Instance(r)
-
-	// Prevent brute force login attempts by not hitting MySQL and pretending like it was invalid :-)
-	if sess.Values["register_attempt"] != nil && sess.Values["register_attempt"].(int) >= 5 {
-		log.Println("Brute force register prevented")
-		http.Redirect(w, r, "/register", http.StatusFound)
-		return
-	}
 
 	// Validate with required fields
 	if validate, missingField := view.Validate(r, []string{"first_name", "last_name", "email"}); !validate {
 		sess.AddFlash(view.Flash{"Field missing: " + missingField, view.FlashError})
 		sess.Save(r, w)
-		RegisterGET(w, r)
+		EmployeeCreateGET(w, r)
 		return
 	}
 
@@ -75,7 +68,7 @@ func EmployeeCreatePOST(w http.ResponseWriter, r *http.Request) {
 	if !recaptcha.Verified(r) {
 		sess.AddFlash(view.Flash{"reCAPTCHA invalid!", view.FlashError})
 		sess.Save(r, w)
-		RegisterGET(w, r)
+		EmployeeCreateGET(w, r)
 		return
 	}
 

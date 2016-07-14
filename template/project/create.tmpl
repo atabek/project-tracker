@@ -1,0 +1,81 @@
+{{define "title"}}Add Project{{end}}
+{{define "head"}}{{end}}
+{{define "content"}}
+
+<div class="container">
+	<div class="page-header">
+		<h1>{{template "title" .}}</h1>
+	</div>
+
+	<form id="form" method="post">
+		<div class="form-group">
+			<label for="project_name">Project Name</label>
+			<div><input type="text" class="form-control" id="project_name"
+				name="project_name" maxlength="48" placeholder="Project Name"
+				value="{{.project_name}}" required/></div>
+		</div>
+
+		<div class="form-group">
+			<label for="customer_company">Customer Company</label>
+			<div><input type="text" class="form-control" id="customer_company"
+				name="customer_company" maxlength="48" placeholder="Customer Company"
+				value="{{.customer_company}}" required/></div>
+		</div>
+
+		<div class="form-group">
+			<label for="employee_company">Employee Company</label>
+			<div><input type="text" class="form-control" id="employee_company"
+				name="employee_company" maxlength="48" placeholder="Employee Company"
+				value="{{.employee_company}}" required/></div>
+		</div>
+
+		<div class="form-group">
+			<label for="supervisor">Supervisor</label>
+			<div><input type="text" class="form-control" id="supervisor"
+				name="supervisor" maxlength="48" placeholder="Supervisor"
+				value="{{.supervisor}}" required/></div>
+		</div>
+
+		<div class="form-group">
+			<label for="priority">Priority</label>
+			<div><input type="number" class="form-control" id="priority"
+				name="priority" min="0" max="100" placeholder="Priority"
+				value="{{.priority}}" required/></div>
+		</div>
+
+		<div class="form-group">
+			<label for="start_date">Start Date</label>
+			<div><input type="date" class="form-control" id="start_date"
+				name="start_date" maxlength="48" placeholder="Start Date"
+				value="{{.start_date}}" required/></div>
+		</div>
+		<div class="form-group">
+			<label for="end_date">End Date</label>
+			<div><input type="date" class="form-control" id="end_date"
+				name="end_date" maxlength="48" placeholder="End Date"
+				value="{{.end_date}}" required/></div>
+		</div>
+
+		<div class="form-group">
+			<label for="end_date">Status</label>
+			<select class="form-control" id="done" value="{{.done}}">
+				<option value="false">Not Completed</option>
+				<option value="true">Completed</option>
+			</select>
+		</div>
+
+		<a title="Save" class="btn btn-success" role="submit" onclick="document.getElementById('form').submit();">
+			<span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Save
+		</a>
+		<a title="Back to Project" class="btn btn-danger" role="button" href="{{$.BaseURI}}project">
+			<span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span> Back
+		</a>
+
+		<input type="hidden" name="token" value="{{.token}}">
+	</form>
+
+	{{template "footer" .}}
+</div>
+
+{{end}}
+{{define "foot"}}{{end}}
