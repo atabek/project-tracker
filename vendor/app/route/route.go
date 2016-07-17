@@ -117,6 +117,12 @@ func routes() *httprouter.Router {
 	r.POST("/employee/create", hr.Handler(alice.
 		New(acl.DisallowAnon).
 		ThenFunc(controller.EmployeeCreatePOST)))
+	r.GET("/employee/view/:id", hr.Handler(alice.
+		New(acl.DisallowAnon).
+		ThenFunc(controller.EmployeeViewGET)))
+	r.POST("/employee/view/:id", hr.Handler(alice.
+		New(acl.DisallowAnon).
+		ThenFunc(controller.EmployeeViewPOST)))
 	r.GET("/employee/update/:id", hr.Handler(alice.
 		New(acl.DisallowAnon).
 		ThenFunc(controller.EmployeeUpdateGET)))
@@ -137,6 +143,12 @@ func routes() *httprouter.Router {
 	r.POST("/project/create", hr.Handler(alice.
 		New(acl.DisallowAnon).
 		ThenFunc(controller.ProjectCreatePOST)))
+	r.GET("/project/view/:id", hr.Handler(alice.
+		New(acl.DisallowAnon).
+		ThenFunc(controller.ProjectViewGET)))
+	r.POST("/project/view/:id", hr.Handler(alice.
+		New(acl.DisallowAnon).
+		ThenFunc(controller.ProjectViewPOST)))
 	r.GET("/project/update/:id", hr.Handler(alice.
 		New(acl.DisallowAnon).
 		ThenFunc(controller.ProjectUpdateGET)))

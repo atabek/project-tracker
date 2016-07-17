@@ -17,14 +17,15 @@ import (
 type Employee struct {
 	ObjectID  bson.ObjectId `bson:"_id"`
     // Don't use Id, use EmployeeID() instead for consistency with MongoDB
-	ID        uint32        `db:"id" bson:"id,omitempty"`
-	FirstName string        `db:"first_name" bson:"first_name"`
-	LastName  string        `db:"last_name" bson:"last_name"`
-	Email     string        `db:"email" bson:"email"`
-	StatusID  uint8         `db:"status_id" bson:"status_id"`
-	CreatedAt time.Time     `db:"created_at" bson:"created_at"`
-	UpdatedAt time.Time     `db:"updated_at" bson:"updated_at"`
-	Deleted   uint8         `db:"deleted" bson:"deleted"`
+	ID        uint32           `db:"id" bson:"id,omitempty"`
+	FirstName string           `db:"first_name" bson:"first_name"`
+	LastName  string           `db:"last_name" bson:"last_name"`
+	Email     string           `db:"email" bson:"email"`
+	StatusID  uint8            `db:"status_id" bson:"status_id"`
+	CreatedAt time.Time        `db:"created_at" bson:"created_at"`
+	UpdatedAt time.Time        `db:"updated_at" bson:"updated_at"`
+	Deleted   uint8            `db:"deleted" bson:"deleted"`
+	ProjectIDs []bson.ObjectId `db:"project_ids" bson:"project_ids"`
 }
 
 // // EmployeeStatus table contains every possible employee status (active/inactive)
@@ -108,6 +109,55 @@ func EmployeeByID(employeeID string) (Employee, error) {
 	}
 
 	return result, standardizeError(err)
+}
+
+func EmployeesByProjectID(projectID string) ([]Employee, error) {
+	var err error
+	var employee_ids []bson.ObjectId
+
+	results := []Employee{}
+	result  := Employee{}
+
+	project := Project{}
+
+
+	switch database.ReadConfig().Type {
+	case database.TypeMongoDB:
+		if database.CheckConnection() {
+			// Create a copy of mongo
+			session := database.Mongo.Copy()
+			defer session.Close()
+			c := session.DB(database.ReadConfig().MongoDB.Database).C("employee")
+			p := session.DB(database.ReadConfig().MongoDB.Database).C("project")
+
+			//err = c.FindId(bson.ObjectIdHex(employeeID)).One(&result)
+
+
+				//fmt.Println(i, s)
+			err = p.FindId(bson.ObjectIdHex(projectID)).One(&project)
+			if err != nil{
+				project = Project{}
+				err = ErrNoResult
+			} else {
+				employee_ids = project.EmployeeIDs
+				for _, employee_id := range employee_ids {
+					err = c.FindId(employee_id).One(&result)
+					if err == nil{
+						results = append(results, result)
+					} else {
+						err = ErrNoResult
+					}
+				}
+			}
+
+		} else {
+			err = ErrUnavailable
+		}
+	default:
+		err = ErrCode
+	}
+
+	return results, standardizeError(err)
 }
 
 func GetAllEmployees() ([]Employee, error){
@@ -203,6 +253,43 @@ func EmployeeUpdate(firstName, lastName, email, employeeID string) error {
 
 	return standardizeError(err)
 }
+
+func EmployeeUpdateByProjectIDs(employeeID string, projectIDs ...string) error {
+	var err error
+
+	now := time.Now()
+	var ids []bson.ObjectId
+
+
+	switch database.ReadConfig().Type {
+	case database.TypeMongoDB:
+		if database.CheckConnection() {
+			// Create a copy of mongo
+			session := database.Mongo.Copy()
+			defer session.Close()
+			c := session.DB(database.ReadConfig().MongoDB.Database).C("employee")
+			var employee Employee
+			employee, err = EmployeeByID(employeeID)
+			if err == nil {
+				employee.UpdatedAt   = now
+				for _, v := range projectIDs {
+					ids = append(ids, bson.ObjectIdHex(v))
+				}
+				employee.ProjectIDs = ids
+				err = c.UpdateId(bson.ObjectIdHex(employeeID), &employee)
+			} else {
+					err = ErrUnauthorized
+			}
+		} else {
+			err = ErrUnavailable
+		}
+	default:
+		err = ErrCode
+	}
+
+	return standardizeError(err)
+}
+
 
 // EmployeeDelete updates a Employee
 func EmployeeDelete(employeeID string) error {

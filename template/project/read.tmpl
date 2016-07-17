@@ -49,12 +49,16 @@
                     <td>
                         <div style="display: inline-block;">
                             <a title="Edit Project" class="btn btn-warning" role="button"
+                            href="{{$.BaseURI}}project/view/{{.ObjectID | PRETTYOBJECTID}}">
+                                <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                            </a>
+                            <a title="Edit Project" class="btn btn-warning" role="button"
                             href="{{$.BaseURI}}project/update/{{.ObjectID | PRETTYOBJECTID}}">
-                                <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> Edit
+                                <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
                             </a>
                             <a title="Delete Project" class="btn btn-danger" role="button"
                             href="{{$.BaseURI}}project/delete/{{.ObjectID | PRETTYOBJECTID}}">
-                                <span class="glyphicon glyphicon-trash" aria-hidden="true"></span> Delete
+                                <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
                             </a>
                         </div>
                     </td>

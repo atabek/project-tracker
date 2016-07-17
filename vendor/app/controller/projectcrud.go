@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"fmt"
 	"strconv"
+	// "reflect"
 
 	"app/model"
 	"app/shared/recaptcha"
@@ -36,6 +37,93 @@ func ProjectReadGET(w http.ResponseWriter, r *http.Request) {
 	v.Vars["first_name"] = sess.Values["first_name"]
 	v.Vars["projects"] = projects
 	v.Render(w)
+}
+
+// ProjectViewGET displays the entries in the project
+func ProjectViewGET(w http.ResponseWriter, r *http.Request) {
+	// Get session
+	sess := session.Instance(r)
+
+	// Get the project id
+	var params httprouter.Params
+	params = context.Get(r, "params").(httprouter.Params)
+	projectID := params.ByName("id")
+	// userID := fmt.Sprintf("%s", sess.Values["id"])
+	// fmt.Println(userID)
+
+	// Get the project
+	project, err := model.ProjectByID(projectID)
+	if err != nil { // If the note doesn't exist
+		log.Println(err)
+		sess.AddFlash(view.Flash{"An error occurred on the server. Please try again later.", view.FlashError})
+		sess.Save(r, w)
+		http.Redirect(w, r, "/project", http.StatusFound)
+		return
+	}
+
+	// Get all of the employees
+	employees, err := model.GetAllEmployees()
+	selected_employees, err := model.EmployeesByProjectID(projectID)
+	if err != nil {
+		log.Println(err)
+		sess.AddFlash(view.Flash{"An error occurred on the server. Please try again later.", view.FlashError})
+		sess.Save(r, w)
+		http.Redirect(w, r, "/project", http.StatusFound)
+		return
+	}
+
+	// Display the view
+	v := view.New(r)
+	v.Name = "project/view"
+	v.Vars["token"] = csrfbanana.Token(w, r, sess)
+
+	v.Vars["first_name"]         = sess.Values["first_name"]
+	v.Vars["project_name"]       = project.ProjectName
+	v.Vars["customer_company"]   = project.CustomerCompany
+	v.Vars["employee_company"]   = project.EmployeeCompany
+	v.Vars["supervisor"]         = project.Supervisor
+	v.Vars["priority"]           = project.Priority
+	v.Vars["start_date"]         = project.StartDate
+	v.Vars["end_date"]           = project.EndDate
+	v.Vars["done"]               = project.Done
+	v.Vars["projectID"]          = project.ObjectID
+	v.Vars["employees"]          = employees
+	v.Vars["selected_employees"] = selected_employees
+	v.Render(w)
+}
+
+func ProjectViewPOST(w http.ResponseWriter, r *http.Request) {
+	// Get the session
+	sess := session.Instance(r)
+	var employeeIDs []string
+
+	// Get the project id
+	var params httprouter.Params
+	params = context.Get(r, "params").(httprouter.Params)
+	projectID := params.ByName("id")
+
+	for k, v := range r.Form {
+		if k == "employee_ids"{
+		    employeeIDs = v
+		}
+    }
+
+	// Get database result
+	err := model.ProjectUpdateByEmployeeIDs(projectID, employeeIDs...)
+	// Will only error if there is a problem with the query
+	if err != nil {
+		log.Println(err)
+		sess.AddFlash(view.Flash{"An error occurred on the server. Please try again later.", view.FlashError})
+		sess.Save(r, w)
+	} else {
+		sess.AddFlash(view.Flash{"Project updated!", view.FlashSuccess})
+		sess.Save(r, w)
+		http.Redirect(w, r, "/project", http.StatusFound)
+		return
+	}
+
+	// Display the same page
+	ProjectViewGET(w, r)
 }
 
 // ProjectCreateGET displays the register page

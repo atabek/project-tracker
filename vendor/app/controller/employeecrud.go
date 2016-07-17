@@ -90,7 +90,7 @@ func EmployeeCreatePOST(w http.ResponseWriter, r *http.Request) {
 		} else {
 			sess.AddFlash(view.Flash{"Account created successfully for: " + email, view.FlashSuccess})
 			sess.Save(r, w)
-			http.Redirect(w, r, "/login", http.StatusFound)
+			http.Redirect(w, r, "/employee", http.StatusFound)
 			return
 		}
 	} else if err != nil { // Catch all other errors
@@ -104,6 +104,86 @@ func EmployeeCreatePOST(w http.ResponseWriter, r *http.Request) {
 
 	// Display the page
 	EmployeeCreateGET(w, r)
+}
+
+func EmployeeViewGET(w http.ResponseWriter, r *http.Request) {
+	// Get the session
+	sess := session.Instance(r)
+
+	// Get the employee id
+	var params httprouter.Params
+	params = context.Get(r, "params").(httprouter.Params)
+	employeeID := params.ByName("id")
+	// userID := fmt.Sprintf("%s", sess.Values["id"])
+	// fmt.Println(userID)
+
+	// Get the employee
+	employee, err := model.EmployeeByID(employeeID)
+	if err != nil { // If the note doesn't exist
+		log.Println(err)
+		sess.AddFlash(view.Flash{"An error occurred on the server. Please try again later.", view.FlashError})
+		sess.Save(r, w)
+		http.Redirect(w, r, "/employee", http.StatusFound)
+		return
+	}
+
+	// Get all of projects
+	projects, err := model.GetAllProjects()
+	selected_projects, err := model.ProjectsByEmployeeID(employeeID)
+	if err != nil {
+		log.Println(err)
+		sess.AddFlash(view.Flash{"An error occurred on the server. Please try again later.", view.FlashError})
+		sess.Save(r, w)
+		http.Redirect(w, r, "/employee", http.StatusFound)
+		return
+	}
+
+	// Display the view
+	v := view.New(r)
+	v.Name = "employee/view"
+	v.Vars["token"] = csrfbanana.Token(w, r, sess)
+
+	v.Vars["employeeID"] = employee.ObjectID
+	v.Vars["first_name"] = employee.FirstName
+	v.Vars["last_name"]  = employee.LastName
+	v.Vars["email"]      = employee.Email
+	v.Vars["projects"]   = projects
+	v.Vars["selected_projects"] = selected_projects
+	v.Render(w)
+}
+
+func EmployeeViewPOST(w http.ResponseWriter, r *http.Request) {
+	// Get the session
+	sess := session.Instance(r)
+	var projectIDs []string
+
+	// Get the project id
+	var params httprouter.Params
+	params = context.Get(r, "params").(httprouter.Params)
+	employeeID := params.ByName("id")
+
+	for k, v := range r.Form {
+		if k == "project_ids"{
+		    projectIDs = v
+		}
+    }
+
+	// Get database result
+	err := model.EmployeeUpdateByProjectIDs(employeeID, projectIDs...)
+	// Will only error if there is a problem with the query
+	if err != nil {
+		log.Println(err)
+		sess.AddFlash(view.Flash{"An error occurred on the server. Please try again later.", view.FlashError})
+		sess.Save(r, w)
+	} else {
+		sess.AddFlash(view.Flash{"Employee updated!", view.FlashSuccess})
+		sess.Save(r, w)
+		http.Redirect(w, r, "/employee", http.StatusFound)
+		return
+	}
+
+	// Display the same page
+	EmployeeViewGET(w, r)
 }
 
 // EmployeeUpdateGET displays the note update page

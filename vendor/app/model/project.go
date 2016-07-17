@@ -17,18 +17,19 @@ import (
 type Project struct {
 	ObjectID  bson.ObjectId `bson:"_id"`
     // Don't use Id, use ProjectID() instead for consistency with MongoDB
-	ID               uint32        `db:"id" bson:"id,omitempty"`
-	ProjectName      string        `db:"project_name" bson:"project_name"`
-	CustomerCompany  string        `db:"customer_company" bson:"customer_company"`
-    EmployeeCompany  string        `db:"employee_company" bson:"employee_company"`
-	Supervisor       string        `db:"supervisor" bson:"supervisor"`
-	Priority         int64         `db:"priority" bson:"priority"`
-    StartDate        string        `db:"start_date" bson:"start_date"`
-    EndDate          string        `db:"end_date" bson:"end_date"`
-	CreatedAt        time.Time     `db:"created_at" bson:"created_at"`
-	UpdatedAt        time.Time     `db:"updated_at" bson:"updated_at"`
-    Done             bool          `db:"done" bson:"done"`
-	Deleted          uint8         `db:"deleted" bson:"deleted"`
+	ID               uint32           `db:"id" bson:"id,omitempty"`
+	ProjectName      string           `db:"project_name" bson:"project_name"`
+	CustomerCompany  string           `db:"customer_company" bson:"customer_company"`
+    EmployeeCompany  string           `db:"employee_company" bson:"employee_company"`
+	Supervisor       string           `db:"supervisor" bson:"supervisor"`
+	Priority         int64            `db:"priority" bson:"priority"`
+    StartDate        string           `db:"start_date" bson:"start_date"`
+    EndDate          string           `db:"end_date" bson:"end_date"`
+	CreatedAt        time.Time        `db:"created_at" bson:"created_at"`
+	UpdatedAt        time.Time        `db:"updated_at" bson:"updated_at"`
+    Done             bool             `db:"done" bson:"done"`
+	Deleted          uint8            `db:"deleted" bson:"deleted"`
+	EmployeeIDs      []bson.ObjectId  `db:"employee_ids" bson:"employee_ids"`
 }
 
 // ProjectID returns the project id
@@ -128,6 +129,52 @@ func GetAllProjects() ([]Project, error){
 	return result, standardizeError(err)
 }
 
+func ProjectsByEmployeeID(employeeID string) ([]Project, error) {
+	var err error
+	var project_ids []bson.ObjectId
+
+	results := []Project{}
+	result  := Project{}
+
+	employee := Employee{}
+
+
+	switch database.ReadConfig().Type {
+	case database.TypeMongoDB:
+		if database.CheckConnection() {
+			// Create a copy of mongo
+			session := database.Mongo.Copy()
+			defer session.Close()
+			c := session.DB(database.ReadConfig().MongoDB.Database).C("employee")
+			p := session.DB(database.ReadConfig().MongoDB.Database).C("project")
+
+			err = c.FindId(bson.ObjectIdHex(employeeID)).One(&employee)
+			if err != nil{
+				employee = Employee{}
+				err = ErrNoResult
+			} else {
+				project_ids = employee.ProjectIDs
+				for _, project_id := range project_ids {
+					err = p.FindId(project_id).One(&result)
+					if err == nil{
+						results = append(results, result)
+					} else {
+						err = ErrNoResult
+					}
+				}
+			}
+
+		} else {
+			err = ErrUnavailable
+		}
+	default:
+		err = ErrCode
+	}
+
+	return results, standardizeError(err)
+}
+
+
 func ProjectCreate(projectName, customerCompany, employeeCompany,
 				   supervisor string, priority int64, startDate ,
 				   endDate string, done bool) error {
@@ -195,6 +242,42 @@ func ProjectUpdate(projectName, customerCompany, employeeCompany, supervisor str
 				project.UpdatedAt       = now
 				project.Done            = done
 
+				err = c.UpdateId(bson.ObjectIdHex(projectID), &project)
+			} else {
+					err = ErrUnauthorized
+			}
+		} else {
+			err = ErrUnavailable
+		}
+	default:
+		err = ErrCode
+	}
+
+	return standardizeError(err)
+}
+
+func ProjectUpdateByEmployeeIDs(projectID string, employeeIDs ...string) error {
+	var err error
+
+	now := time.Now()
+	var ids []bson.ObjectId
+
+
+	switch database.ReadConfig().Type {
+	case database.TypeMongoDB:
+		if database.CheckConnection() {
+			// Create a copy of mongo
+			session := database.Mongo.Copy()
+			defer session.Close()
+			c := session.DB(database.ReadConfig().MongoDB.Database).C("project")
+			var project Project
+			project, err = ProjectByID(projectID)
+			if err == nil {
+				project.UpdatedAt   = now
+				for _, v := range employeeIDs {
+					ids = append(ids, bson.ObjectIdHex(v))
+				}
+				project.EmployeeIDs = ids
 				err = c.UpdateId(bson.ObjectIdHex(projectID), &project)
 			} else {
 					err = ErrUnauthorized
